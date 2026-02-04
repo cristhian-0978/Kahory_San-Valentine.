@@ -3,16 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <title>San Valentín 💘</title>
+
+  <!-- EmailJS -->
   <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+  <script>
+    emailjs.init("TU_PUBLIC_KEY_AQUI");
+  </script>
 
   <style>
     body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #ff758c, #ff7eb3);
       height: 100vh;
       display: flex;
-      justify-content: center;
       align-items: center;
-      background: linear-gradient(135deg, #ff9a9e, #fad0c4);
-      font-family: Arial, sans-serif;
+      justify-content: center;
+      overflow: hidden;
     }
 
     .card {
@@ -20,9 +26,9 @@
       padding: 30px;
       border-radius: 20px;
       text-align: center;
-      width: 320px;
+      width: 90%;
+      max-width: 400px;
       box-shadow: 0 10px 25px rgba(0,0,0,.2);
-      position: relative;
     }
 
     h1 {
@@ -30,10 +36,10 @@
     }
 
     button {
-      padding: 10px 20px;
-      font-size: 16px;
+      padding: 12px 25px;
+      font-size: 18px;
       border: none;
-      border-radius: 20px;
+      border-radius: 12px;
       cursor: pointer;
       margin: 10px;
     }
@@ -47,11 +53,6 @@
       background: #ccc;
       position: absolute;
     }
-
-    .dates button {
-      background: #ffb703;
-      color: white;
-    }
   </style>
 </head>
 <body>
@@ -63,11 +64,6 @@
 </div>
 
 <script>
-  emailjs.init("aTB_eqM-MM1lg3eYD"); // 
-
-  const serviceID = "service_2kdat27";
-  const templateID = "template_d714ivy";
-
   const question = document.getElementById("question");
   const yesBtn = document.getElementById("yes");
   const noBtn = document.getElementById("no");
@@ -77,69 +73,80 @@
   let maintenanceClicks = 0;
 
   const languages = [
+    "¿Quieres ser mi San Valentín? 💖",
     "Will you be my Valentine? 💖",
     "Vuoi essere il mio San Valentino? 💖",
     "Willst du mein Valentinstag sein? 💖",
     "Veux-tu être mon Valentin ? 💖"
   ];
 
-  function sendMail(text) {
-    emailjs.send(serviceID, templateID, {
-      message: text
-    });
-  }
-
-  noBtn.style.top = "200px";
-  noBtn.style.left = "60px";
-
+  // NO huye
   noBtn.addEventListener("mouseover", () => {
-    const x = Math.random() * 200;
-    const y = Math.random() * 200;
+    const x = Math.random() * (window.innerWidth - 120);
+    const y = Math.random() * (window.innerHeight - 60);
     noBtn.style.left = x + "px";
     noBtn.style.top = y + "px";
   });
 
   noBtn.addEventListener("click", () => {
     noClicks++;
-    sendMail("Presionó NO (" + noClicks + ")");
 
+    // Cambios de idioma
     if (noClicks <= languages.length) {
-      question.textContent = languages[noClicks - 1];
-    } 
-    else if (noClicks === languages.length + 1) {
-      question.textContent = "Botón en mantenimiento 🛠️";
-    } 
-    else if (noClicks === languages.length + 2) {
-      question.textContent = "Tienes que presionar el botón 44 veces para continuar";
-    } 
-    else {
+      question.textContent = languages[noClicks];
+      sendMail("Presionó NO", languages[noClicks]);
+      return;
+    }
+
+    // Mantenimiento
+    if (noClicks === languages.length + 1) {
+      question.textContent = "⚠️ Botón en mantenimiento";
+      sendMail("Botón en mantenimiento", "-");
+      return;
+    }
+
+    // Contador 44
+    if (noClicks > languages.length + 1 && maintenanceClicks < 44) {
       maintenanceClicks++;
-      if (maintenanceClicks >= 44) {
-        question.textContent = "El botón estaba en mantenimiento 😅 lo llevé a reparar.";
-        noBtn.remove();
-        sendMail("El botón NO desapareció definitivamente");
-      }
+      question.textContent = `Debes presionar el botón ${44 - maintenanceClicks} veces para continuar`;
+      return;
+    }
+
+    // Final
+    if (maintenanceClicks >= 44) {
+      question.textContent = "El botón estaba en mantenimiento 😅 lo llevé a reparar";
+      noBtn.remove();
     }
   });
 
   yesBtn.addEventListener("click", () => {
-    sendMail("Dijo que SÍ 💖");
-
     card.innerHTML = `
-      <h1>Desayuno ☕🥐</h1>
-      <p>Paso por ti a las 10:00 am</p>
-      <p>Hotel La Cascada – Buffet 💘</p>
+      <h1>💘 Cita confirmada 💘</h1>
+      <p>Desayuno 🍳</p>
+      <p>Paso por ti a las <b>10:00 am</b></p>
+      <p>Lugar: <b>Hotel La Cascada (Buffet)</b></p>
       <p>¿Qué día prefieres?</p>
-      <div class="dates">
-        <button onclick="chooseDate(14)">14</button>
-        <button onclick="chooseDate(15)">15</button>
-      </div>
+      <button onclick="selectDate('14')">14</button>
+      <button onclick="selectDate('15')">15</button>
     `;
+    sendMail("Presionó SÍ", "-");
   });
 
-  function chooseDate(day) {
-    sendMail("Eligió el día " + day);
-    card.innerHTML = `<h1>Perfecto 💖<br>Día ${day} ✨</h1>`;
+  function selectDate(day) {
+    sendMail("Seleccionó fecha", day);
+    card.innerHTML = `<h1>💖 Perfecto, día ${day} 💖</h1>`;
+  }
+
+  function sendMail(action, date) {
+    emailjs.send(
+      "service_2kdat27",
+      "template_d714ivy",
+      {
+        action: action,
+        date: date,
+        time: new Date().toLocaleTimeString()
+      }
+    );
   }
 </script>
 
